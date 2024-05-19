@@ -1,0 +1,81 @@
+spring:
+  application:
+    name: test-resilience-beginner
+  jpa:
+    hibernate:
+      ddl-auto: update
+server:
+  port: 8880
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - "*"
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+#This is for CircuitBreaker
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+
+
+
+  retry:
+    instances:
+      studentApiRetry:
+        maxAttempts: 3
+        waitDuration: 5s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - org.springframework.web.client.RestClientException
+        ignoreExceptions:
+          - java.lang.ArrayIndexOutOfBoundsException
+
+
+  ratelimiter:
+    instances:
+      studentApiRateLimiter:
+        limitForPeriod: 10
+        limitRefreshPeriod: 10s
+        timeoutDuration: 3s
+
+
+  timelimiter:
+    instances:
+      studentApiTimeLimiter:
+        timeoutDuration: 3s
+        cancelRunningFuture: true
+
+
+
+  bulkhead:
+    instances:
+      studentApiBulkHead:
+        maxWaitDuration: 10ms
+        maxConcurrentCalls: 20
+
+  thread-pool-bulkhead:
+    instances:
+      studentApiBulkHeadThreadPool:
+        maxThreadPoolSize: 1
+        coreThreadPoolSize: 1
+        queueCapacity: 1
+        writableStackTraceEnabled: true
